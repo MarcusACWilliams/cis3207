@@ -5,6 +5,7 @@
 void init_myshell(char *arg);
 void myshell_cmd_loop(void);
 void parse_this(char *str,char **stra, int *c);
+//int my_clr();
 int shell_exe(char **stra);
 struct env_vars enviorment;
 

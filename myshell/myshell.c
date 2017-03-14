@@ -4,8 +4,9 @@
 
 void init_myshell(char *arg);
 void myshell_cmd_loop(void);
-void parse_this(char *str,char **stra, int *c);
+void parse_this(char *str,char **stra, int *c, char *in, char *out);
 int shell_exe(char **stra);
+void redi(char *in, char *out);
 struct env_vars enviorment;
 
 
@@ -60,9 +61,12 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1, count = 0;
+	int status = 1, /*count = 0,*/ redirect = 0;
 	char *line = malloc(1024);
+	char *new_input = malloc(256);
+	char *new_output = malloc(256);
 	char **args = malloc(1024);
+
 
 	//char *tok, *cmpr;
 
@@ -72,7 +76,12 @@ void myshell_cmd_loop(void)
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line,args, &count);// Parse user input
+	parse_this(line,args, &redirect, new_input, new_output);// Parse user input
+	if(redirect)
+	{
+	 redi(new_input, new_output);
+
+	}
 	
 
 	status = shell_exe(args); // Execute commands
@@ -98,7 +107,7 @@ void myshell_cmd_loop(void)
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *count)
+void parse_this(char *str,char **stra, int *flag, char *in, char *out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
@@ -109,7 +118,22 @@ void parse_this(char *str,char **stra, int *count)
 	while(token != NULL)
 	{
 	  stra[i] = token;
-	  token = strtok(NULL, " ");
+
+	//Detects the redirect characters in input stream and assigns file
+	  if(flag == -1){in = token; *flag =2;}
+	  else if(flag == 1){out = token; *flag = 3;}
+
+	  token = strtok(NULL, " \n");
+	  if(!strcmp(stra[i],"<"))
+	  {
+		*flag = -1;
+		 printf("!!!!redirect!!!!");		
+	  }
+	   else if(!strcmp(stra[i],">"))
+	   {
+		*flag = 1; 
+	   }
+
 	  i++;
 	}
 
@@ -136,8 +160,6 @@ int shell_exe(char **stra)
 	int i = 0, flag = 1;
 	 
 
-//	printf("Enter execute\n");
-
 	if(stra[0] == NULL || stra[0] == "\r")
 	{
 	printf("Please Enter a Command\n");
@@ -159,5 +181,17 @@ int shell_exe(char **stra)
 	printf("Command \"%s\" not found\n", stra[0]);
 
 	return 1;
+
+}
+
+void redi(char *in, char *out)
+{
+	int in_fd, out_fd;
+
+	if(in != NULL)
+	{
+	in_fd = open(in, O_RDONLY);
+	dup2(in_fd, 0);	
+	}
 
 }

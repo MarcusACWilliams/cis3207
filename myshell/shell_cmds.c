@@ -45,7 +45,7 @@ int my_echo(char **args)
 	i++;
 	}
 
-	printf("\n");
+	//printf("\n");
 
 	return 1;
 }

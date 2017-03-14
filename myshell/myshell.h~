@@ -16,6 +16,7 @@
 int my_cd(char**);
 int my_clr();
 int my_quit(char**);
+int my_echo(char**);
 
 extern const char *built_in[];
 extern int (*cmds[])(char **);
@@ -24,6 +25,7 @@ struct env_vars
 {
 	char *PWD;
 	char *DIR;
+	int *arg_count;
 
 
 };

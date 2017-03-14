@@ -10,14 +10,15 @@ struct env_vars enviorment;
 
 
 
-        const char *built_in[] = {"clear", "exit", "cd"};
+        const char *built_in[] = {"clear", "exit", "cd", "echo"};
 
 	int (*cmds[])(char **) = 
 	{
 
 	&my_clr,
 	&my_quit,
-	&my_cd
+	&my_cd,
+	&my_echo
 
 	};
 
@@ -56,9 +57,10 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1,j =0, count = 0;
+	int status = 1, count = 0;
 	char *line = malloc(1024);
 	char **args = malloc(1024);
+
 	//char *tok, *cmpr;
 
 	do
@@ -73,10 +75,11 @@ void myshell_cmd_loop(void)
 	status = shell_exe(args); // Execute commands
 
 	
-	j=0;
+	
 
 //********Uncomment to print out all parsed tokens*********//
-/*	 tok = args[j]; 	           
+/*	int j = 0;	 
+	tok = args[j]; 	           
 	while(j < count && (tok != NULL))
 	{
 	 printf("\n%s",tok);
@@ -107,6 +110,8 @@ void parse_this(char *str,char **stra, int *count)
 	  i++;
 	}
 
+	enviorment.arg_count = i;
+
 /*	// Test Block that prints out all the tokens of the parsed line
 	i = 0;
         token = stra[i];
@@ -136,7 +141,7 @@ int shell_exe(char **stra)
 	return 1;
 	}
 
-	while(i < 3 && flag)
+	while(i < 4 && flag)
 	{
 	
 	 if(!strcmp(stra[0], built_in[i]))

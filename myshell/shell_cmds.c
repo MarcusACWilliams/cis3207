@@ -35,3 +35,17 @@ int my_cd(char **args)
 	}
 	return 1;
 }
+
+int my_echo(char **args)
+{
+	int i = 1;
+	while(i < enviorment.arg_count)
+	{	
+	printf("%s ", args[i]);
+	i++;
+	}
+
+	printf("\n");
+
+	return 1;
+}

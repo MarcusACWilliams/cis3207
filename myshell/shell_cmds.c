@@ -60,3 +60,14 @@ int my_environ()
 	return 1;
 }
 
+int my_pause()// makes program hold untill enter is pressed
+{
+	getchar();
+	return 1;
+}
+
+int my_help(char **args)
+{
+	
+	return 1;
+}

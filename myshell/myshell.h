@@ -18,6 +18,8 @@ int my_clr();
 int my_quit(char**);
 int my_echo(char**);
 int my_environ();
+int my_pause();
+int my_help(char**);
 
 extern const char *built_in[];
 extern int (*cmds[])(char **);

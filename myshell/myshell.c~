@@ -10,7 +10,7 @@ struct env_vars enviorment;
 
 
 
-        const char *built_in[] = {"clear", "exit", "cd", "echo", "environ"};
+        const char *built_in[] = {"clear", "exit", "cd", "echo", "environ", "pause", "help"};
 
 	int (*cmds[])(char **) = 
 	{
@@ -19,7 +19,9 @@ struct env_vars enviorment;
 	&my_quit,
 	&my_cd,
 	&my_echo,
-	&my_environ
+	&my_environ,
+	&my_pause,
+	&my_help
 
 	};
 
@@ -136,13 +138,13 @@ int shell_exe(char **stra)
 
 //	printf("Enter execute\n");
 
-	if(stra[0] == NULL)
+	if(stra[0] == NULL || stra[0] == "\n")
 	{
 	printf("Please Enter a Command\n");
 	return 1;
 	}
 
-	while(i < 4 && flag)
+	while(i < 8 && flag)
 	{
 	
 	 if(!strcmp(stra[0], built_in[i]))

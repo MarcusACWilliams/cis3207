@@ -23,7 +23,7 @@ extern int (*cmds[])(char **);
 struct env_vars
 {
 	char *PWD;
-	
+	char *DIR;
 
 
 };

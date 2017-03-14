@@ -10,13 +10,14 @@ struct env_vars enviorment;
 
 
 
-        const char *built_in[] = {"clear", "exit"};
+        const char *built_in[] = {"clear", "exit", "cd"};
 
 	int (*cmds[])(char **) = 
 	{
 
 	&my_clr,
-	&my_quit
+	&my_quit,
+	&my_cd
 
 	};
 
@@ -44,7 +45,9 @@ void init_myshell(char *argv)
 {
 	
 	if((enviorment.PWD = getcwd(NULL, 0) )!= NULL)
-	{}else{perror("Error getting current directory\n");}
+	{
+	enviorment.DIR = enviorment.PWD;
+	}else{perror("Error getting current directory\n");}
 
 	return ;
 }
@@ -60,7 +63,7 @@ void myshell_cmd_loop(void)
 
 	do
 	{
-	printf("%s>", enviorment.PWD);
+	printf("%s>", enviorment.DIR);
 
 	fgets(line, 1024, stdin);
 
@@ -133,7 +136,7 @@ int shell_exe(char **stra)
 	return 1;
 	}
 
-	while(i < 2 && flag)
+	while(i < 3 && flag)
 	{
 	
 	 if(!strcmp(stra[0], built_in[i]))

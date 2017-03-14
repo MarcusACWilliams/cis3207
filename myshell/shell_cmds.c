@@ -18,6 +18,6 @@ int my_clr()
 int my_quit(char **args)
 {
 	printf("Quit Shell\n");
- return 0;
+ 	return 0;
 
 }

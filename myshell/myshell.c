@@ -138,7 +138,7 @@ int shell_exe(char **stra)
 
 	if(stra[0] == NULL)
 	{
-	printf("Nothing to execute\n");
+	printf("Please Enter a Command\n");
 	return 1;
 	}
 
@@ -153,6 +153,8 @@ int shell_exe(char **stra)
 
 	 i++;
 	}
+	
+	printf("Command \"%s\" not found\n", stra[0]);
 
 	return 1;
 

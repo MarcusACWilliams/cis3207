@@ -49,3 +49,14 @@ int my_echo(char **args)
 
 	return 1;
 }
+
+int my_environ()
+{
+
+	printf("PATH : %s\n", getenv("PATH"));
+   	printf("HOME : %s\n", getenv("HOME"));
+   	printf("ROOT : %s\n", getenv("ROOT"));
+
+	return 1;
+}
+

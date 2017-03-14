@@ -10,7 +10,7 @@ struct env_vars enviorment;
 
 
 
-        const char *built_in[] = {"clear", "exit", "cd", "echo"};
+        const char *built_in[] = {"clear", "exit", "cd", "echo", "environ"};
 
 	int (*cmds[])(char **) = 
 	{
@@ -18,7 +18,8 @@ struct env_vars enviorment;
 	&my_clr,
 	&my_quit,
 	&my_cd,
-	&my_echo
+	&my_echo,
+	&my_environ
 
 	};
 
@@ -110,7 +111,7 @@ void parse_this(char *str,char **stra, int *count)
 	  i++;
 	}
 
-	*enviorment.arg_count = i;
+	enviorment.arg_count = i;
 
 /*	// Test Block that prints out all the tokens of the parsed line
 	i = 0;

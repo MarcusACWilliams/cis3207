@@ -17,6 +17,7 @@ int my_cd(char**);
 int my_clr();
 int my_quit(char**);
 int my_echo(char**);
+int my_environ();
 
 extern const char *built_in[];
 extern int (*cmds[])(char **);

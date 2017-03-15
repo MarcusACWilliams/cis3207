@@ -6,6 +6,7 @@ void init_myshell(char *arg);
 void myshell_cmd_loop(void);
 void parse_this(char *str,char **stra, int *c, char *in, char *out);
 int shell_exe(char **stra);
+void redi(char *new_in, char *new_out, int *in, int *out);
 struct env_vars enviorment;
 
 
@@ -65,6 +66,7 @@ void myshell_cmd_loop(void)
 	char *new_input = malloc(256);
 	char *new_output = malloc(256);
 	char **args = malloc(1024);
+	int in = 0 , out = 1;
 
 
 	//char *tok, *cmpr;
@@ -78,7 +80,7 @@ void myshell_cmd_loop(void)
 	parse_this(line,args, &redirect, new_input, new_output);// Parse user input
 	if(redirect)
 	{
-	 redi(new_input, new_output);
+	 redi(new_input, new_output, &in , &out);
 
 	}
 	
@@ -102,11 +104,12 @@ void myshell_cmd_loop(void)
 
 	}while(status);// Run cmd_loop untill status is set to 0
 
+	
 
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *flag, char *in, char *out)
+void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
@@ -168,14 +171,15 @@ int shell_exe(char **stra)
 	while(i < 8 && flag)
 	{
 	
-	 if(!strcmp(stra[0], built_in[i]))
-	 {
-	  flag = 0;
-	  return (*cmds[i])(stra);
-	 }
+	 	if(!strcmp(stra[0], built_in[i]))
+	 	{
+	  	flag = 0;
+	 	return (*cmds[i])(stra);
+	 	}
 
-	 i++;
+	 	i++;
 	}
+	
 	
 	printf("Command \"%s\" not found\n", stra[0]);
 
@@ -183,7 +187,7 @@ int shell_exe(char **stra)
 
 }
 
-void redi(char *in, char *out)
+void redi(char *new_in, char *new_out, int *in, int *out)
 {
 	int in_fd, out_fd;
 
@@ -192,5 +196,36 @@ void redi(char *in, char *out)
 	in_fd = open(in, O_RDONLY);
 	dup2(in_fd, 0);	
 	}
+	if(out != NULL)
+	{
+	out_fd = open(out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR);
+	dup2(out_fd, 1);
+	}
+
 
 }
+
+int run(char **stra)
+{
+	int i, status;
+	pid_t childPID;
+	
+	if((childPID = fork()) == -1)
+	{
+		perror("Error Starting Program");	
+	}
+	else if(childPID == 0)// Do in child process
+	{
+		if(execvp(stra[0], stra) == -1)
+		{
+		perror("Error Running Program");
+		exit(EXIT_FAILURE);
+		}
+	}else
+	{
+		waitpid(childPID, &status, 0);
+		return 1;	
+
+	}
+
+} 

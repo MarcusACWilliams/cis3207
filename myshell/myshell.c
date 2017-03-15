@@ -6,7 +6,7 @@ void init_myshell(char *arg);
 void myshell_cmd_loop(void);
 void parse_this(char *str,char **stra, int *c, char *in, char *out);
 int shell_exe(char **stra);
-void redi(char *in, char *out);
+void redi(char *new_in, char *new_out);
 struct env_vars enviorment;
 
 
@@ -103,11 +103,12 @@ void myshell_cmd_loop(void)
 
 	}while(status);// Run cmd_loop untill status is set to 0
 
+	
 
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *flag, char *in, char *out)
+void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
@@ -120,8 +121,8 @@ void parse_this(char *str,char **stra, int *flag, char *in, char *out)
 	  stra[i] = token;
 
 	//Detects the redirect characters in input stream and assigns file
-	  if(flag == -1){in = token; *flag =2;}
-	  else if(flag == 1){out = token; *flag = 3;}
+	  if(flag == -1){new_in = token; *flag =2;}
+	  else if(flag == 1){new_out = token; *flag = 3;}
 
 	  token = strtok(NULL, " \n");
 	  if(!strcmp(stra[i],"<"))
@@ -169,14 +170,15 @@ int shell_exe(char **stra)
 	while(i < 8 && flag)
 	{
 	
-	 if(!strcmp(stra[0], built_in[i]))
-	 {
-	  flag = 0;
-	  return (*cmds[i])(stra);
-	 }
+	 	if(!strcmp(stra[0], built_in[i]))
+	 	{
+	  	flag = 0;
+	 	return (*cmds[i])(stra);
+	 	}
 
-	 i++;
+	 	i++;
 	}
+	
 	
 	printf("Command \"%s\" not found\n", stra[0]);
 
@@ -184,14 +186,55 @@ int shell_exe(char **stra)
 
 }
 
-void redi(char *in, char *out)
+// Invoked whenever the redirection flag is set to TRUE
+void redi(char *new_in, char *new_out)
 {
 	int in_fd, out_fd;
 
-	if(in != NULL)
+	if(new_in != NULL)
 	{
-	in_fd = open(in, O_RDONLY);
-	dup2(in_fd, 0);	
+		if( (in_fd = open(new_in, O_RDONLY)) == -1) // Open input file and store its file descriptor in in_fd
+		{
+			perror("Error opening file");
+
+		}else
+			{
+			dup2(in_fd, 0);				// Next change input file's file descriptor to 0 effectively making it the new stdin
+			}							// **For future referencing, if it still seems counter intuitive, remeber that dup2(old,new) is makes "old" and "new" interchangeable file
+										// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
+	}								
+	if(new_out != NULL)				
+	{							 
+	out_fd = open(new_out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
+	dup2(out_fd, 1);				
 	}
 
+
 }
+
+int run(char **stra)
+{
+	int status;
+	pid_t childPID;
+	
+	if((childPID = fork()) == -1)
+	{
+		perror("Error Starting Program");	
+	}
+	else if(childPID == 0)// Do in child process
+	{
+		if(execvp(stra[0], stra) == -1)
+		{
+		perror("Error Running Program");
+		exit(EXIT_FAILURE);
+		}
+	}else
+	{
+		waitpid(childPID, &status, 0);
+		return 1;	
+
+	}
+
+	return 1;
+
+} 

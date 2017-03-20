@@ -75,11 +75,6 @@ int my_help(char **args)
     FILE *fp;
     int c;
 
-        // strcpy(buffer, enviorment.DIR);
-        // strcat(buffer, slash);
-        // strcat(buffer, n);
-    
-
      
         strcpy(buffer, more);
         strcat(buffer, enviorment.DIR);

@@ -4,11 +4,12 @@
 
 void init_myshell(char *arg);
 void myshell_cmd_loop(void);
-void parse_this(char *str,char **stra, int *c, char *in, char *out);
-int shell_exe(char **stra);
+void parse_this(char *str,char **stra, int *flag, int *p_flag, int *bg , char *in, char *out);
+int shell_exe(char **stra, int *bg);
 void redi(char *new_in, char *new_out);
 int pipe_to(int p1, int p2, char **stra);
-int run(char **stra);
+int run(char **stra, int *bg);
+int background();
 struct env_vars enviorment;
 
 
@@ -63,7 +64,7 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1, /*count = 0,*/ redirect = 0;
+	int status = 1, /*count = 0,*/ redirect = 0, p_flag = 0, bg = 0;
 	char *line = malloc(1024);
 	char *new_input = malloc(256);
 	char *new_output = malloc(256);
@@ -76,15 +77,22 @@ void myshell_cmd_loop(void)
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line, args, &redirect, new_input, new_output);// Parse user input
+	parse_this(line, args, &redirect, &p_flag, &bg, new_input, new_output);// Parse user input
 	if(redirect)
 	{
 	 redi(new_input, new_output);
 
 	}
-	
+	if(pipe)
+	{
 
-	status = shell_exe(args); // Execute commands
+	}
+	if(bg)
+	{
+
+	}	
+
+	status = shell_exe(args, bg); // Execute commands
 
 	
 //********Uncomment to print out all parsed tokens*********//
@@ -105,7 +113,7 @@ void myshell_cmd_loop(void)
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
+void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, char *new_in, char *new_out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
@@ -118,8 +126,8 @@ void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 	  stra[i] = token;
 
 	//Detects the redirect characters in input stream and assigns file
-	  if(flag == -1){new_in = token; *flag =2;}
-	  else if(flag == 1){new_out = token; *flag = 3;}
+	  if(*flag == -1){new_in = token; *flag =2;}
+	  else if(*flag == 1){new_out = token; *flag = 3;}
 
 	  token = strtok(NULL, " \n");
 	  if(!strcmp(stra[i],"<"))
@@ -134,12 +142,13 @@ void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 
 	  if(!strcmp(stra[i], "|"))
 	  {
-
+	  	*p_flag = 1;
+	  	pipe_to(i, i+2, stra);
 	  }
 
 	  if(!strcmp(stra[i], "&"))
 	  {
-	  	
+	  	*bg = 1;
 	  }
 
 	  i++;
@@ -150,7 +159,7 @@ void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 }
 
 // Check user input against the list of built in commands and if not attempt to run as an external program
-int shell_exe(char **stra)
+int shell_exe(char **stra, int *bg)
 {
 	int i = 0, j = 0, flag = 1;
 	char pro_1 = malloc(256), pro_2 = malloc(256);
@@ -175,7 +184,7 @@ int shell_exe(char **stra)
 	}
 	
 	// Run arg[0] as a program if it fails print message
-	if(run(stra))
+	if(run(stra, bg))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -246,7 +255,7 @@ int pipe_to(int p1, int p2, char **stra)
 
 
 
-int run(char **stra)
+int run(char **stra,int *bg)
 {
 	int status;
 	pid_t childPID;
@@ -262,6 +271,10 @@ int run(char **stra)
 		perror("Error Running Program");
 		exit(EXIT_FAILURE);
 		}
+		if(bg)
+		{
+		background();
+		}
 	}else
 	{
 		waitpid(childPID, &status, 0);
@@ -275,5 +288,6 @@ int run(char **stra)
 
 int background()
 {
+	printf("Setting program to background\n");
 	setpgid(0,0);
 }

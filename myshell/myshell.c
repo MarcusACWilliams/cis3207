@@ -7,11 +7,12 @@ void myshell_cmd_loop(void);
 void parse_this(char *str,char **stra, int *c, char *in, char *out);
 int shell_exe(char **stra);
 void redi(char *new_in, char *new_out);
+int pipe_to(int p1, int p2, char **stra);
 struct env_vars enviorment;
 
 
 
-        const char *built_in[] = {"clear", "exit", "cd", "echo", "environ", "pause", "help"};
+const char *built_in[] = {"clear", "exit", "cd", "echo", "environ", "pause", "help"};
 
 	int (*cmds[])(char **) = 
 	{
@@ -68,15 +69,13 @@ void myshell_cmd_loop(void)
 	char **args = malloc(1024);
 
 
-	//char *tok, *cmpr;
-
 	do
 	{
 	printf("%s>", enviorment.DIR);
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line,args, &redirect, new_input, new_output);// Parse user input
+	parse_this(line, args, &redirect, new_input, new_output);// Parse user input
 	if(redirect)
 	{
 	 redi(new_input, new_output);
@@ -158,7 +157,8 @@ void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 
 int shell_exe(char **stra)
 {
-	int i = 0, flag = 1;
+	int i = 0, j = 0, flag = 1;
+	char pro_1 = malloc(256), pro_2 = malloc(256);
 	 
 
 	if(stra[0] == NULL || stra[0] == "\r")
@@ -170,7 +170,7 @@ int shell_exe(char **stra)
 	while(i < 8 && flag)
 	{
 	
-	 	if(!strcmp(stra[0], built_in[i]))
+	 	if(!strcmp(stra[j], built_in[i]))
 	 	{
 	  	flag = 0;
 	 	return (*cmds[i])(stra);
@@ -179,8 +179,12 @@ int shell_exe(char **stra)
 	 	i++;
 	}
 	
+	if(execvp(stra[0], stra) == -1)
+	{
+		printf("Command \"%s\" not found\n", stra[0]);
+	}
 	
-	printf("Command \"%s\" not found\n", stra[0]);
+	
 
 	return 1;
 
@@ -208,6 +212,38 @@ void redi(char *new_in, char *new_out)
 	out_fd = open(new_out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
 	dup2(out_fd, 1);				
 	}
+
+int pipe_to(int p1, int p2, char **stra)
+{
+	int pipe_fd[2];
+	pid_t head, tail;
+	//char buf;
+
+	if(pipe(pipe_fd) == -1)
+	{
+		perror("Error creating pipe");
+		return 1;
+	}
+
+	head = fork();
+	
+	if(head == 0)
+	{
+		close(pipe_fd[1]);
+		execvp(stra[p1], stra);
+	}
+
+	tail = fork();
+
+	if(tail == 0)
+	{
+		close(pipe_fd[0]);
+		execvp(stra[p2], stra);
+	}
+
+	close(pipe_fd[0]);
+	close(pipe_fd[1]);
+}
 
 
 }

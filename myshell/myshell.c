@@ -8,6 +8,7 @@ void parse_this(char *str,char **stra, int *c, char *in, char *out);
 int shell_exe(char **stra);
 void redi(char *new_in, char *new_out);
 int pipe_to(int p1, int p2, char **stra);
+int run(char **stra);
 struct env_vars enviorment;
 
 
@@ -86,8 +87,6 @@ void myshell_cmd_loop(void)
 	status = shell_exe(args); // Execute commands
 
 	
-	
-
 //********Uncomment to print out all parsed tokens*********//
 /*	int j = 0;	 
 	tok = args[j]; 	           
@@ -99,7 +98,6 @@ void myshell_cmd_loop(void)
 	
 	} 
 */
-
 	}while(status);// Run cmd_loop untill status is set to 0
 
 	
@@ -134,27 +132,24 @@ void parse_this(char *str,char **stra, int *flag, char *new_in, char *new_out)
 		*flag = 1; 
 	   }
 
+	  if(!strcmp(stra[i], "|"))
+	  {
+
+	  }
+
+	  if(!strcmp(stra[i], "&"))
+	  {
+	  	
+	  }
+
 	  i++;
 	}
 
 	enviorment.arg_count = i;
-
-/*	// Test Block that prints out all the tokens of the parsed line
-	i = 0;
-        token = stra[i];
-	
-	while(i < *count)
-	{
-	 printf("\n%s",token);
-	 i++;
-	 token = stra[i];
-	 
-	}*/
- 
-//	printf("Line parse successful!\n");	
 	
 }
 
+// Check user input against the list of built in commands and if not attempt to run as an external program
 int shell_exe(char **stra)
 {
 	int i = 0, j = 0, flag = 1;
@@ -179,7 +174,8 @@ int shell_exe(char **stra)
 	 	i++;
 	}
 	
-	if(execvp(stra[0], stra) == -1)
+	// Run arg[0] as a program if it fails print message
+	if(run(stra))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -212,7 +208,9 @@ void redi(char *new_in, char *new_out)
 	out_fd = open(new_out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
 	dup2(out_fd, 1);				
 	}
+}
 
+// If a pipe between two child processes is needed use this function
 int pipe_to(int p1, int p2, char **stra)
 {
 	int pipe_fd[2];
@@ -246,7 +244,7 @@ int pipe_to(int p1, int p2, char **stra)
 }
 
 
-}
+
 
 int run(char **stra)
 {
@@ -267,10 +265,15 @@ int run(char **stra)
 	}else
 	{
 		waitpid(childPID, &status, 0);
-		return 1;	
+		return 0;	
 
 	}
 
 	return 1;
 
 } 
+
+int background()
+{
+	setpgid(0,0);
+}

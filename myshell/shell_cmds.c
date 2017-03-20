@@ -45,8 +45,6 @@ int my_echo(char **args)
 	i++;
 	}
 
-	//printf("\n");
-
 	return 1;
 }
 
@@ -68,6 +66,27 @@ int my_pause()// makes program hold untill enter is pressed
 
 int my_help(char **args)
 {
-	
-	return 1;
+	char buffer[1024];
+    char *more = "more -d ";
+    char *echo = "echo ";
+    char *slash = "/";
+    char *n = "readme";
+
+    FILE *fp;
+    int c;
+
+        // strcpy(buffer, enviorment.DIR);
+        // strcat(buffer, slash);
+        // strcat(buffer, n);
+    
+
+     
+        strcpy(buffer, more);
+        strcat(buffer, enviorment.DIR);
+        strcat(buffer, slash);
+        strcat(buffer, n);
+        system(buffer);
+    
+
+    return 1;
 }

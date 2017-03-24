@@ -39,7 +39,7 @@ int my_cd(char **args)
 int my_echo(char **args)
 {
 	int i = 1;
-	while(i < enviorment.arg_count)
+	while(enviorment.arg_count != NULL)
 	{	
 	printf("%s ", args[i]);
 	i++;
@@ -68,12 +68,12 @@ int my_help(char **args)
 {
 	char buffer[1024];
     char *more = "more -d ";
-    char *echo = "echo ";
+    //char *echo = "echo ";
     char *slash = "/";
     char *n = "readme";
 
-    FILE *fp;
-    int c;
+    //FILE *fp;
+    //int c;
 
      
         strcpy(buffer, more);

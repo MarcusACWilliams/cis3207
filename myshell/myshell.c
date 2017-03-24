@@ -4,11 +4,11 @@
 
 void init_myshell(char *arg);
 void myshell_cmd_loop(void);
-void parse_this(char *str,char **stra, int *flag, int *p_flag, int *bg , int *in, int *out);
-int shell_exe(char **stra, int *bg);
+int parse_this(char *str,char **stra, int *redirect, int *p_flag, int *bg , int *in, int *out);
+int shell_exe(char **stra, int *redirect, int *new_in, int *new_out);
 void redi(char **stra, int *new_in, int *new_out);
 int pipe_to(int p1, int p2, char **stra);
-int run(char **stra, int *bg, int *new_in, int *new_out);
+int run(char **stra, int *redirect, int *new_in, int *new_out);
 int background();
 struct env_vars enviorment;
 
@@ -64,10 +64,10 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1,redirect = 0, p_flag = 0,bgint = 0, *bg = &bgint;
+	int status = 1,redi_flag = 0, *redirect = &redi_flag, p_flag = 0,bgint = 0, *bg = &bgint;
 	char *line = malloc(1024);
-	int new_input = 0;
-	int new_output = 0;
+	int in = 0,  *new_input = &in;
+	int out = 0, *new_output = &out;
 	char **args = malloc(1024);
 
 
@@ -77,7 +77,7 @@ void myshell_cmd_loop(void)
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line, args, &redirect, &p_flag, &bg, &new_input, &new_output);// Parse user input
+	parse_this(line, args, redirect, &p_flag, bg, new_input, new_output);// Parse user input
 	// if(redirect)
 	// {
 	//  redi(args, new_input, new_output);
@@ -92,12 +92,12 @@ void myshell_cmd_loop(void)
 
 	// }	
 
-	status = shell_exe(args, bg, new_input, new_output); // Execute commands
-		if(redirect)
-	{
-	 redi(args, new_input, new_output);
+	status = shell_exe(args, redirect, new_input, new_output); // Execute commands
+	// 	if(redirect)
+	// {
+	//  redi(args, new_input, new_output);
 
-	}
+	// }
 
 	
 //********Uncomment to print out all parsed tokens*********//
@@ -118,32 +118,36 @@ void myshell_cmd_loop(void)
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_in, int *new_out)
+int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *new_in, int *new_out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
 	int i = 0;	
 	
-	token = strtok(str," \n");
+	token = strtok(str," \n"); // Get first Token
 
 	while(token != NULL)
 	{
 	  stra[i] = token;
+	 
 
-
-	  token = strtok(NULL, " \n");
 	  if(!strcmp(stra[i],"<"))
 	  {
+
 		 *new_in = i+1;
-		 stra[i] = NULL;
+		 stra[i] = "";
+		 *redirect = 1;
 
 		 printf("!!!!redirect!!!!");		
 	  }
 	   else if(!strcmp(stra[i],">"))
 	   {
+	   	printf("I see the '>'!!!\n");
 		 *new_out = i+1; 
-		 stra[i] = NULL;
-		 printf("!!!!redirect!!!!");
+		 stra[i] = "";
+		 *redirect = 1;
+		 printf("!!!!redirect!!!!\n");
+		 return 1;
 	   }
 
 	  if(!strcmp(stra[i], "|"))
@@ -156,10 +160,13 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_
 	  {
 	  	*bg = 1;
 	  }
+
 	  i++;
+	  token = strtok(NULL, " \n");
 	}
 
-	enviorment.arg_count = i;
+	//enviorment.arg_count = i;
+	return 1;
 	
 }
 
@@ -208,10 +215,11 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_
 // }
 
 // Check user input against the list of built in commands and if not attempt to run as an external program
-int shell_exe(char **stra, int bg)
+int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 {
 	int i = 0, j = 0, flag = 1;
-	char pro_1 = malloc(256), pro_2 = malloc(256);
+	//char pro_1 = malloc(256), pro_2 = malloc(256);
+
 	 
 
 	if(stra[0] == NULL || stra[0] == "\r")// Check for empty input string
@@ -232,7 +240,7 @@ int shell_exe(char **stra, int bg)
 	 	i++;
 	}
 	// Run arg[0] as a program if it fails print message
-	if(!run(stra, bg))
+	if(!run(stra, redirect, new_in, new_out))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -248,6 +256,8 @@ void redi(char **stra, int *new_in, int *new_out)
 {
 	int in_fd, out_fd;
 
+	printf("in:%d  out: %d\n", *new_in, *new_out );
+
 	if(*new_in != 0)
 	{
 		if( (in_fd = open(stra[*new_in], O_RDONLY)) == -1) // Open input file and store its file descriptor in in_fd
@@ -261,8 +271,10 @@ void redi(char **stra, int *new_in, int *new_out)
 										// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
 	}								
 	if(*new_out != 0)				
-	{							 
+	{	
+	printf("trying to open file\n");						 
 	out_fd = open(stra[*new_out], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
+	printf("opened file\n");
 	dup2(out_fd, 1);				
 	}
 }
@@ -298,12 +310,14 @@ int pipe_to(int p1, int p2, char **stra)
 
 	close(pipe_fd[0]);
 	close(pipe_fd[1]);
+
+	return 1;
 }
 
 
 
 
-int run(char **stra,int *bg,int *new_in, int *new_out)
+int run(char **stra,int *redirect,int *new_in, int *new_out)
 {
 	int status;
 	pid_t childPID;
@@ -315,21 +329,21 @@ int run(char **stra,int *bg,int *new_in, int *new_out)
 	}
 	else if(childPID == 0)// Do in child process
 	{
-				if(redirect)
-	{
-	 redi(args, *new_input, *new_output);
+		if(redirect)
+		{
+	 	redi(stra, new_in, new_out);
+		}
 
-	}
 		if(execvp(stra[0], stra) == -1)
 		{
 		perror("Error Running Program");
 		//exit(EXIT_FAILURE);
 		return 0;
 		}
-		if(bg)
-		{
-		background();
-		}
+		// if(bg)
+		// {
+		// background();
+		// }
 	}else
 	{
 		waitpid(childPID, &status, 0);
@@ -345,4 +359,5 @@ int background()
 {
 	printf("Setting program to background\n");
 	setpgid(0,0);
+	return 1;
 }

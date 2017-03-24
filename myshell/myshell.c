@@ -77,20 +77,7 @@ void myshell_cmd_loop(void)
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line, args, redirect, &p_flag, bg, new_input, new_output);// Parse user input
-	// if(redirect)
-	// {
-	//  redi(args, new_input, new_output);
-
-	// }
-	// if(pipe)
-	// {
-
-	// }
-	// if(bg)
-	// {
-
-	// }	
+	parse_this(line, args, redirect, &p_flag, bg, new_input, new_output);// Parse user input	
 
 	status = shell_exe(args, redirect, new_input, new_output); // Execute commands
 	// 	if(redirect)
@@ -125,12 +112,12 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 	char *token ;
 	int i = 0;	
 	
-	token = strtok(str," \n"); // Get first Token
+	//token = strtok(str," \n"); // Get first Token
 
-	while(token != NULL)
+	for(token = strtok(str, "  \n"); token != NULL; token = strtok(NULL, " \n"))
 	{
 	  stra[i] = token;
-	 
+	  printf("%s\n", stra[i] );
 
 	  if(!strcmp(stra[i],"<"))
 	  {
@@ -148,24 +135,24 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 		 stra[i] = NULL;
 		 *redirect = 1;
 		 printf("!!!!redirect!!!!\n");
-		 return 1;
 	   }
 
-	  if(!strcmp(stra[i], "|"))
-	  {
-	  	*p_flag = 1;
-	  	pipe_to(i, i+2, stra);
-	  }
+	  // if(!strcmp(stra[i], "|"))
+	  // {
+	  // 	*p_flag = 1;
+	  // 	pipe_to(i, i+2, stra);
+	  // }
 
-	  if(!strcmp(stra[i], "&"))
-	  {
-	  	*bg = 1;
-	  }
+	  // if(!strcmp(stra[i], "&"))
+	  // {
+	  // 	*bg = 1;
+	  // }
 
 	  i++;
-	  token = strtok(NULL, " \n");
+	  //token = strtok(NULL, " \n");
 	}
 
+	printf("Finished Parsing\n");
 	//enviorment.arg_count = i;
 	return 1;
 	
@@ -219,13 +206,13 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 {
 	int i = 0, j = 0, flag = 1;
-	char* word;
+	//char* word;
 	// int *in = *&new_in, *out = *&new_out;
 	// char **arg = *&stra;
 	//char pro_1 = malloc(256), pro_2 = malloc(256);
-	word = stra[0];
+	//word = stra[3];
 
-	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, word );
+	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, stra[3] );
 	 
 
 	if(stra[0] == NULL || stra[0] == "\r")// Check for empty input string

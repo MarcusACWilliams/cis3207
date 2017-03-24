@@ -4,9 +4,9 @@
 
 void init_myshell(char *arg);
 void myshell_cmd_loop(void);
-void parse_this(char *str,char **stra, int *flag, int *p_flag, int *bg , char *in, char *out);
+void parse_this(char *str,char **stra, int *flag, int *p_flag, int *bg , int *in, int *out);
 int shell_exe(char **stra, int *bg);
-void redi(char *new_in, char *new_out);
+void redi(char **stra, int *new_in, int *new_out);
 int pipe_to(int p1, int p2, char **stra);
 int run(char **stra, int *bg);
 int background();
@@ -64,10 +64,10 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1, /*count = 0,*/ redirect = 0, p_flag = 0, bg = 0;
+	int status = 1,redirect = 0, p_flag = 0, bg = 0;
 	char *line = malloc(1024);
-	char *new_input = malloc(256);
-	char *new_output = malloc(256);
+	int *new_input = 0;
+	int *new_output = 0;
 	char **args = malloc(1024);
 
 
@@ -77,10 +77,10 @@ void myshell_cmd_loop(void)
 
 	fgets(line, 1024, stdin);
 
-	parse_this(line, args, &redirect, &p_flag, &bg, new_input, new_output);// Parse user input
+	parse_this(line, args, &redirect, &p_flag, &bg, &new_input, &new_output);// Parse user input
 	if(redirect)
 	{
-	 redi(new_input, new_output);
+	 redi(args, new_input, new_output);
 
 	}
 	if(pipe)
@@ -113,7 +113,7 @@ void myshell_cmd_loop(void)
 	return ;
 }
 
-void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, char *new_in, char *new_out)
+void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_in, int *new_out)
 {
 	//char **tokens = malloc(1024);
 	char *token ;
@@ -125,19 +125,16 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, char *new
 	{
 	  stra[i] = token;
 
-	//Detects the redirect characters in input stream and assigns file
-	  if(*flag == -1){new_in = token; *flag =2;}
-	  else if(*flag == 1){new_out = token; *flag = 3;}
 
 	  token = strtok(NULL, " \n");
 	  if(!strcmp(stra[i],"<"))
 	  {
-		*flag = -1;
+		 *new_in = i+1;
 		 printf("!!!!redirect!!!!");		
 	  }
 	   else if(!strcmp(stra[i],">"))
 	   {
-		*flag = 1; 
+		 *new_out = i+1; 
 	   }
 
 	  if(!strcmp(stra[i], "|"))
@@ -150,13 +147,56 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, char *new
 	  {
 	  	*bg = 1;
 	  }
-
 	  i++;
 	}
 
 	enviorment.arg_count = i;
 	
 }
+
+// void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, char *new_in, char *new_out)
+// {
+// 	//char **tokens = malloc(1024);
+// 	char *token ;
+// 	int i = 0;	
+	
+// 	token = strtok(str," \n");
+
+// 	while(token != NULL)
+// 	{
+// 	  stra[i] = token;
+
+// 	// //Detects the redirect characters in input stream and assigns file
+// 	//   if(*flag == -1){new_in = token; *flag =2;}
+// 	//   else if(*flag == 1){new_out = token; *flag = 3;}
+
+// 	//   token = strtok(NULL, " \n");
+// 	//   if(!strcmp(stra[i],"<"))
+// 	//   {
+// 	// 	*flag = -1;
+// 	// 	 printf("!!!!redirect!!!!");		
+// 	//   }
+// 	//    else if(!strcmp(stra[i],">"))
+// 	//    {
+// 	// 	*flag = 1; 
+// 	//    }
+
+// 	//   if(!strcmp(stra[i], "|"))
+// 	//   {
+// 	//   	*p_flag = 1;
+// 	//   	pipe_to(i, i+2, stra);
+// 	//   }
+
+// 	//   if(!strcmp(stra[i], "&"))
+// 	//   {
+// 	//   	*bg = 1;
+// 	//   }
+// 	  i++;
+// 	}
+
+// 	enviorment.arg_count = i;
+	
+// }
 
 // Check user input against the list of built in commands and if not attempt to run as an external program
 int shell_exe(char **stra, int *bg)
@@ -165,7 +205,7 @@ int shell_exe(char **stra, int *bg)
 	char pro_1 = malloc(256), pro_2 = malloc(256);
 	 
 
-	if(stra[0] == NULL || stra[0] == "\r")
+	if(stra[0] == NULL || stra[0] == "\r")// Check for empty input string
 	{
 	printf("Please Enter a Command\n");
 	return 1;
@@ -196,13 +236,13 @@ int shell_exe(char **stra, int *bg)
 }
 
 // Invoked whenever the redirection flag is set to TRUE
-void redi(char *new_in, char *new_out)
+void redi(char **stra, int *new_in, int *new_out)
 {
 	int in_fd, out_fd;
 
-	if(new_in != NULL)
+	if(*new_in != 0)
 	{
-		if( (in_fd = open(new_in, O_RDONLY)) == -1) // Open input file and store its file descriptor in in_fd
+		if( (in_fd = open(stra[*new_in], O_RDONLY)) == -1) // Open input file and store its file descriptor in in_fd
 		{
 			perror("Error opening file");
 
@@ -212,9 +252,9 @@ void redi(char *new_in, char *new_out)
 			}							// **For future referencing, if it still seems counter intuitive, remeber that dup2(old,new) is makes "old" and "new" interchangeable file
 										// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
 	}								
-	if(new_out != NULL)				
+	if(*new_out != 0)				
 	{							 
-	out_fd = open(new_out, O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
+	out_fd = open(stra[*new_out], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
 	dup2(out_fd, 1);				
 	}
 }

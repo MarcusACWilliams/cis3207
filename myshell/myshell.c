@@ -135,7 +135,7 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 	  {
 
 		 *new_in = i+1;
-		 stra[i] = "";
+		 stra[i] = NULL;
 		 *redirect = 1;
 
 		 printf("!!!!redirect!!!!");		
@@ -144,7 +144,7 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 	   {
 	   	printf("I see the '>'!!!\n");
 		 *new_out = i+1; 
-		 stra[i] = "";
+		 stra[i] = NULL;
 		 *redirect = 1;
 		 printf("!!!!redirect!!!!\n");
 		 return 1;
@@ -218,6 +218,8 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 {
 	int i = 0, j = 0, flag = 1;
+	int *in = *&new_in, *out = *&new_out;
+	char **arg = *&stra;
 	//char pro_1 = malloc(256), pro_2 = malloc(256);
 
 	 
@@ -240,7 +242,7 @@ int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 	 	i++;
 	}
 	// Run arg[0] as a program if it fails print message
-	if(!run(stra, redirect, new_in, new_out))
+	if(!run(arg, redirect, in, out))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -256,7 +258,7 @@ void redi(char **stra, int *new_in, int *new_out)
 {
 	int in_fd, out_fd;
 
-	printf("in:%d  out: %d\n", *new_in, *new_out );
+	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, stra[3] );
 
 	if(*new_in != 0)
 	{
@@ -268,15 +270,18 @@ void redi(char **stra, int *new_in, int *new_out)
 			{
 			dup2(in_fd, 0);				// Next change input file's file descriptor to 0 effectively making it the new stdin
 			}							// **For future referencing, if it still seems counter intuitive, remeber that dup2(old,new) is makes "old" and "new" interchangeable file
-										// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
+		close(in_fd);					// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
 	}								
 	if(*new_out != 0)				
 	{	
 	printf("trying to open file\n");						 
 	out_fd = open(stra[*new_out], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 
 	printf("opened file\n");
-	dup2(out_fd, 1);				
+	dup2(out_fd, 1);	
+	close(out_fd);			
 	}
+
+
 }
 
 // If a pipe between two child processes is needed use this function
@@ -322,6 +327,8 @@ int run(char **stra,int *redirect,int *new_in, int *new_out)
 	int status;
 	pid_t childPID;
 	
+	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, stra[3] );
+
 	if((childPID = fork()) == -1)
 	{
 		perror("Error Starting Program");

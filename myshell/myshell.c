@@ -8,7 +8,7 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int *bg , int *in
 int shell_exe(char **stra, int *bg);
 void redi(char **stra, int *new_in, int *new_out);
 int pipe_to(int p1, int p2, char **stra);
-int run(char **stra, int *bg);
+int run(char **stra, int *bg, int *new_in, int *new_out);
 int background();
 struct env_vars enviorment;
 
@@ -64,10 +64,10 @@ void init_myshell(char *argv)
 
 void myshell_cmd_loop(void)
 {
-	int status = 1,redirect = 0, p_flag = 0, bg = 0;
+	int status = 1,redirect = 0, p_flag = 0,bgint = 0, *bg = &bgint;
 	char *line = malloc(1024);
-	int *new_input = 0;
-	int *new_output = 0;
+	int new_input = 0;
+	int new_output = 0;
 	char **args = malloc(1024);
 
 
@@ -78,21 +78,26 @@ void myshell_cmd_loop(void)
 	fgets(line, 1024, stdin);
 
 	parse_this(line, args, &redirect, &p_flag, &bg, &new_input, &new_output);// Parse user input
-	if(redirect)
+	// if(redirect)
+	// {
+	//  redi(args, new_input, new_output);
+
+	// }
+	// if(pipe)
+	// {
+
+	// }
+	// if(bg)
+	// {
+
+	// }	
+
+	status = shell_exe(args, bg, new_input, new_output); // Execute commands
+		if(redirect)
 	{
 	 redi(args, new_input, new_output);
 
 	}
-	if(pipe)
-	{
-
-	}
-	if(bg)
-	{
-
-	}	
-
-	status = shell_exe(args, bg); // Execute commands
 
 	
 //********Uncomment to print out all parsed tokens*********//
@@ -130,11 +135,15 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_
 	  if(!strcmp(stra[i],"<"))
 	  {
 		 *new_in = i+1;
+		 stra[i] = NULL;
+
 		 printf("!!!!redirect!!!!");		
 	  }
 	   else if(!strcmp(stra[i],">"))
 	   {
 		 *new_out = i+1; 
+		 stra[i] = NULL;
+		 printf("!!!!redirect!!!!");
 	   }
 
 	  if(!strcmp(stra[i], "|"))
@@ -199,7 +208,7 @@ void parse_this(char *str,char **stra, int *flag, int *p_flag, int*bg, int *new_
 // }
 
 // Check user input against the list of built in commands and if not attempt to run as an external program
-int shell_exe(char **stra, int *bg)
+int shell_exe(char **stra, int bg)
 {
 	int i = 0, j = 0, flag = 1;
 	char pro_1 = malloc(256), pro_2 = malloc(256);
@@ -222,9 +231,8 @@ int shell_exe(char **stra, int *bg)
 
 	 	i++;
 	}
-	
 	// Run arg[0] as a program if it fails print message
-	if(run(stra, bg))
+	if(!run(stra, bg))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -295,21 +303,28 @@ int pipe_to(int p1, int p2, char **stra)
 
 
 
-int run(char **stra,int *bg)
+int run(char **stra,int *bg,int *new_in, int *new_out)
 {
 	int status;
 	pid_t childPID;
 	
 	if((childPID = fork()) == -1)
 	{
-		perror("Error Starting Program");	
+		perror("Error Starting Program");
+		return 0;
 	}
 	else if(childPID == 0)// Do in child process
 	{
+				if(redirect)
+	{
+	 redi(args, *new_input, *new_output);
+
+	}
 		if(execvp(stra[0], stra) == -1)
 		{
 		perror("Error Running Program");
-		exit(EXIT_FAILURE);
+		//exit(EXIT_FAILURE);
+		return 0;
 		}
 		if(bg)
 		{
@@ -318,7 +333,7 @@ int run(char **stra,int *bg)
 	}else
 	{
 		waitpid(childPID, &status, 0);
-		return 0;	
+			
 
 	}
 

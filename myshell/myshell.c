@@ -101,16 +101,17 @@ void myshell_cmd_loop(void)
 
 	
 //********Uncomment to print out all parsed tokens*********//
-/*	int j = 0;	 
+	char *tok;
+	int j = 0;	 
 	tok = args[j]; 	           
-	while(j < count && (tok != NULL))
+	while(tok != NULL)
 	{
 	 printf("\n%s",tok);
  	 j++;
 	 tok = args[j];
 	
 	} 
-*/
+
 	}while(status);// Run cmd_loop untill status is set to 0
 
 	
@@ -218,10 +219,13 @@ int parse_this(char *str,char **stra, int *redirect, int *p_flag, int*bg, int *n
 int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 {
 	int i = 0, j = 0, flag = 1;
-	int *in = *&new_in, *out = *&new_out;
-	char **arg = *&stra;
+	char* word;
+	// int *in = *&new_in, *out = *&new_out;
+	// char **arg = *&stra;
 	//char pro_1 = malloc(256), pro_2 = malloc(256);
+	word = stra[0];
 
+	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, word );
 	 
 
 	if(stra[0] == NULL || stra[0] == "\r")// Check for empty input string
@@ -242,7 +246,7 @@ int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 	 	i++;
 	}
 	// Run arg[0] as a program if it fails print message
-	if(!run(arg, redirect, in, out))
+	if(!run(stra, redirect, new_in, new_out))
 	{
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
@@ -260,7 +264,7 @@ void redi(char **stra, int *new_in, int *new_out)
 
 	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, stra[3] );
 
-	if(*new_in != 0)
+	if(new_in != 0)
 	{
 		if( (in_fd = open(stra[*new_in], O_RDONLY)) == -1) // Open input file and store its file descriptor in in_fd
 		{
@@ -272,7 +276,7 @@ void redi(char **stra, int *new_in, int *new_out)
 			}							// **For future referencing, if it still seems counter intuitive, remeber that dup2(old,new) is makes "old" and "new" interchangeable file
 		close(in_fd);					// 		descriptors. If "new" is already in use (i.e. stdin) it is atomicly closed, which is the main advantage of dup2 over dup
 	}								
-	if(*new_out != 0)				
+	if(new_out != 0)				
 	{	
 	printf("trying to open file\n");						 
 	out_fd = open(stra[*new_out], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWGRP | S_IWUSR); // Same as above but now you are redirecting stdout to a file 

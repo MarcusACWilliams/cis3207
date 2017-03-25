@@ -24,15 +24,15 @@ int my_help(char**);
 extern const char *built_in[];
 extern int (*cmds[])(char **);
 
-struct env_vars
+typedef struct env_vars
 {
 	char *PWD;
 	char *DIR;
 	int *arg_count;
 
 
-};
+}env_vars;
 
-extern struct env_vars enviorment;
+extern env_vars enviorment;
 
 #endif

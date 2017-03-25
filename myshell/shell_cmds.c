@@ -39,11 +39,12 @@ int my_cd(char **args)
 int my_echo(char **args)
 {
 	int i = 1;
-	while(enviorment.arg_count != NULL)
+	while(args[i] != NULL)//i < 4)//(enviorment.arg_count +1))
 	{	
 	printf("%s ", args[i]);
 	i++;
 	}
+	printf("\n");
 
 	return 1;
 }

@@ -1,1 +1,61 @@
-readme
+myshell 
+
+
+DESCRIPTION     
+	
+	This is a basic shell replica. It takes user input from the
+command line and executes commands thats are entered. While the fucntionality
+of the shell is limited, you are able to call basic commands, execute
+programs, import files, and redirect output.
+
+BUILT-IN/INTERNAL COMMANDS
+	
+cd:     
+	This is a standard command that changes your current directory to
+the directory specified. If no argument is entered it will simply return.
+	cd <directory name>
+
+clear:  
+	This command will clear the terminal window and return.
+	clear <>
+
+exit:   
+	This command will close all programs and files that are open and
+terminate the shell.             
+	exit <>
+
+echo:   
+	This command will print a string argument enclosed in quotes. This
+command has redirection capabilities and can have its output pushed to a text
+file. This file must be in the shell directory. If redirection is not
+specified output is sent to stdout.             
+	echo <"string">  > "outputfile"   -Truncate output file             
+	echo <"string">  >> "output file" -Appened output file.
+
+
+environ:
+	This command prints out the current eviorment variables.
+	environ <>
+
+pause:  
+	This command will pause operation of the shell untill the user
+	presses <ENTER>      
+	pause <>
+
+help:   
+	This command will give you general information about the shell.
+	It opens the readme file for the shell
+
+I/O redirection:
+
+	To redirect input use the "<" operator followed by the name of your
+	desired input. To specify a new output use the ">" operator followed
+	by the name of your desired output.
+
+Pipes:
+
+	You are able to chain multiple commands together using the "|" 
+	character. This will make the argument to the left of the pipe
+	the input to the argument on the right. 
+
+

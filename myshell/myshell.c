@@ -75,6 +75,7 @@ void myshell_cmd_loop(void)
 	{
 	printf("%s>", enviorment.DIR);
 
+
 	fgets(line, 1024, stdin);
 
 	parse_this(line, args, redirect, &p_flag, bg, new_input, new_output);// Parse user input	
@@ -98,10 +99,15 @@ void myshell_cmd_loop(void)
 	 tok = args[j];
 	
 	} 
+	memset(line, 0, 1024);
+	memset(args, 0, 1024);
 
 	}while(status);// Run cmd_loop untill status is set to 0
 
 	
+
+	// free(new_input);
+	// free(new_output);
 
 	return ;
 }
@@ -238,7 +244,6 @@ int shell_exe(char **stra, int *redirect, int *new_in, int *new_out)
 		printf("Command \"%s\" not found\n", stra[0]);
 	}
 	
-	
 
 	return 1;
 
@@ -318,7 +323,7 @@ int run(char **stra,int *redirect,int *new_in, int *new_out)
 	int status;
 	pid_t childPID;
 	
-	printf("in:%d  out: %d file: %s\n", *new_in, *new_out, stra[3] );
+	printf("in:%d  redirect: %d file: %s\n", *new_in, *redirect, stra[3] );
 
 	if((childPID = fork()) == -1)
 	{
@@ -327,9 +332,10 @@ int run(char **stra,int *redirect,int *new_in, int *new_out)
 	}
 	else if(childPID == 0)// Do in child process
 	{
-		if(redirect)
+		if(*redirect)
 		{
 	 	redi(stra, new_in, new_out);
+	 	*redirect = 0;
 		}
 
 		if(execvp(stra[0], stra) == -1)
@@ -344,10 +350,13 @@ int run(char **stra,int *redirect,int *new_in, int *new_out)
 		// }
 	}else
 	{
-		waitpid(childPID, &status, 0);
-			
+		wait(&status);
+		*redirect = 0;
 
 	}
+	// free(*stra);
+	// free(new_in);
+	// free(new_out);
 
 	return 1;
 

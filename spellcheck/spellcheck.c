@@ -53,11 +53,43 @@ void error(const char *msg)
      int sockfd, newsockfd, portno, status = 1, flag = 1;
      socklen_t clilen;
      char buffer[256];
-     int clients[] = {0,0,0,0}, i;
-
-
+     int clients[] = {0,0,0,0};
      struct sockaddr_in serv_addr, cli_addr;
      int n;
+
+     int i = 1, k = 1;
+     int err;
+     pthread_t thread;
+     char thread_name[16];
+
+
+///////////////////////////////////////////////////////////////////// Rename master thread
+    thread = pthread_self();
+    err = pthread_setname_np(thread, "Master");
+    if (err != 0)
+            printf("can't rename thread :[%s]\n", strerror(err));
+    else
+            printf("Thread renamed successfully\n");
+
+    err = pthread_getname_np(thread, thread_name, 16);
+    if (err != 0)
+            printf("can't get thread name :[%s]\n", strerror(err));
+
+    printf("\n");
+
+////////////////////////////////////////////////////////////////////// Create worker threads
+
+
+    while(i < 21)
+    {
+        err = pthread_create(&(tid[i]), NULL, &doSomeThing, NULL);
+        if (err != 0)
+            printf("can't create thread :[%s]\n", strerror(err));
+        else
+            printf("Thread %d created successfully\n", i);
+
+        i++;
+    }
 
 //////////////////////////////////////////////////////Start Server... Create Socket and bind
      if (argc < 2) {
@@ -82,80 +114,49 @@ void error(const char *msg)
      
 
 
+
+
+/////////////////////////////////////////////////////// Main thread accepting and storing client fds     
+     flag = 1;
+     int queue = 1;
      while(status)
      {
         clilen = sizeof(cli_addr);
-        flag = 1;
+        
 
-        for(i = 0; flag == 1; i++){
-            printf("Yes!\n");
-            if(clients[i] == 0){     
-            clients[i] = accept(sockfd, 
+        for(queue = 0; flag == 1; queue++){
+    
+            if(queue== 4){printf("Queue Full\n" );flag =0;}
+            else if(clients[queue] == 0){     
+            clients[queue] = accept(sockfd, 
                  (struct sockaddr *) &cli_addr, &clilen);
 
-            printf("\rNumber of connections: %d",i );
-            if(clients[i] < 0) 
+            printf("\rNumber of connections: %d",queue);
+            if(clients[queue] < 0) 
                 error("ERROR on accept");
-            }else if(i == 3){printf("Queue Full\n" );}
-            
+            } 
         }
     }
 
-     bzero(buffer,256);
-     n = read(newsockfd,buffer,255);
-     if (n < 0) error("ERROR reading from socket");
-     printf("Here is the message: %s\n",buffer);
-     n = write(newsockfd,"I got your message",18);
-     if (n < 0) error("ERROR writing to socket");
-     close(newsockfd);
-     close(sockfd);
+     // bzero(buffer,256);
+     // n = read(newsockfd,buffer,255);
+     // if (n < 0) error("ERROR reading from socket");
+     // printf("Here is the message: %s\n",buffer);
+     // n = write(newsockfd,"I got your message",18);
+     // if (n < 0) error("ERROR writing to socket");
+     // close(newsockfd);
+     // close(sockfd);
 
-     return 0; 
-
-
+     // return 0;
 
 
+    printf("%s is now done.... waiting for workers\n", thread_name);
+
+    for ( k = 1 ; k < 21; k++){
+       pthread_join(tid[k], NULL);
+    }
+
+    return 0;
 
 
-
-
-
-
-    // int i = 1, k = 1;
-    // int err;
-    // pthread_t thread;
-    // char thread_name[16];
-
-    // thread = pthread_self();
-    // err = pthread_setname_np(thread, "Master");
-    // if (err != 0)
-    //         printf("can't rename thread :[%s]\n", strerror(err));
-    // else
-    //         printf("Thread renamed successfully\n");
-
-    // err = pthread_getname_np(thread, thread_name, 16);
-    // if (err != 0)
-    //         printf("can't get thread name :[%s]\n", strerror(err));
-
-
-    // printf("\n");
-
-    // while(i < 21)
-    // {
-    //     err = pthread_create(&(tid[i]), NULL, &doSomeThing, NULL);
-    //     if (err != 0)
-    //         printf("can't create thread :[%s]\n", strerror(err));
-    //     else
-    //         printf("Thread %d created successfully\n", i);
-
-    //     i++;
-    // }
-
-    // printf("%s is now done.... waiting for workers\n", thread_name);
-
-    // for ( k = 1 ; k < 21; k++){
-    //    pthread_join(tid[k], NULL);
-    // }
-
-    // return 0;
 }

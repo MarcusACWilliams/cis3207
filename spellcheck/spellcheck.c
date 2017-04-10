@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 
 pthread_t tid[20];
-int client_count = 0, in = 0, out = 0;
+int client_count = 0, in = 0, out = 0, full = 0;
 int clients[49];
 FILE *fp;
 pthread_mutex_t client_mutex, service_mutex, count_mutex;
@@ -27,6 +27,8 @@ void add_client(int client_fd)
     clients[in%50] = client_fd;
     pthread_mutex_lock(&count_mutex);
     client_count = client_count + 1;
+    if(client_count >49)
+        full = 1;
     pthread_mutex_unlock(&count_mutex);
     in = in + 1;
     //printf("client added!\n");
@@ -42,6 +44,7 @@ int service_client()
      pthread_mutex_lock(&service_mutex);
      pthread_mutex_lock(&count_mutex);
      client_count = client_count - 1;
+     full = 0;
      pthread_mutex_unlock(&count_mutex);
      new_out = clients[out%50];
      clients[out%50] = 0;
@@ -101,7 +104,8 @@ void* doSomeThing(void *arg)
             fd = service_client();
             if(fd != 0)
             {
-                check(fd);
+                check(fd);                                  ///////Call check function
+
             if (n < 0){ error("ERROR writing to socket");}
                 close(fd);
             }
@@ -144,8 +148,6 @@ int main(int argc, char *argv[])
     if (err != 0)
             printf("can't get thread name :[%s]\n", strerror(err));
 
-////////////////////////////////////////////////////////////////////// Create worker threads
-
 //////////////////////////////////////////////////////Start Server... Create Socket and bind
      
      if (argc < 2) {
@@ -167,9 +169,8 @@ int main(int argc, char *argv[])
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
      listen(sockfd,5);                                   //Set port Listener
-     //printf("binding complete\n");
-/////////////////////////////////////////////////////// Main thread accepting and storing client fds     
-
+     //printf("binding complete\n");     
+////////////////////////////////////////////////////////////////////// Create worker threads
     while(y < 5)
     {
         err = pthread_create(&(tid[y]), NULL, &doSomeThing, NULL);
@@ -180,15 +181,20 @@ int main(int argc, char *argv[])
         y++;
     }
 
-     int flag = 1;
+/////////////////////////////////////////////////////// Main thread accepting and storing client fds
+     //int flag = 1;
      int client_fd;
      clilen = sizeof(cli_addr);
 
      while(1)
      {
     
-        if(client_count == 49){printf("in Full\n" );flag =0;}               //stop producing if full
-        else if(clients[in%50] == 0){     
+        if(full)
+        {
+            //stop producing if full   
+        }               
+        else if(clients[in%50] == 0)
+        {     
         client_fd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         if(clients[in%50] < 0) 
             error("ERROR on accept");

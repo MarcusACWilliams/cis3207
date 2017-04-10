@@ -12,8 +12,8 @@
 pthread_t tid[20];
 int client_count = 0, in = 0, out = 0;
 int clients[49];
+FILE *fp;
 pthread_mutex_t client_mutex, service_mutex, count_mutex;
-
 
 void error(const char *msg)
 {
@@ -54,56 +54,60 @@ int service_client()
      return 0;
 }
 
+////////////////////////////////////////////////////////// Perform spellcheck
+int check(int filep)
+{
+ 
+ char buffer[255];
+ char file_buff[255];
+ int n =0, k = 0;
+
+    fp = fopen("dictionary.txt", "r" );
+    //printf("fd: %d\n", fd );
+    bzero(buffer,255);
+    bzero(file_buff,255);
+    n = read(filep,buffer,255);
+    if (n < 0) error("ERROR reading from socket");
+    while(fgets(file_buff, 255, fp))
+    {  
+        
+        if(!strcmp(buffer, file_buff))
+        {
+            n = write(filep,"Word spelled correctly",36);
+            fclose(fp);
+            return 1;
+            k++;
+        }             
+    }
+    n = write(filep,"Word Not found \n",18);
+    return 1;
+    
+
+}
+
+//////////////////////////////////////////////////////////////// Thread Function
 void* doSomeThing(void *arg)
 {
-    int fd =0;
-    int j = 0, no_match = 1;
+    int fd =0, j = 0, n = 0;
+    
     pthread_t id = pthread_self();
-    char buffer[256];
-    int n;
-
     while(!pthread_equal(id, tid[j]))
-    {
-        j++;
-    }
-
-    //printf("Thread Number %d processing\n", j);
+    {j++;}
 
     while(1)
     {
         if(client_count > 0)
         {
             fd = service_client();
-
             if(fd != 0)
             {
-            //printf("fd: %d\n", fd );
-            bzero(buffer,256);
-            n = read(fd,buffer,255);
-            if (n < 0) error("ERROR reading from socket");
-            //printf("Here is the message: %s\n",buffer);
-
-                 while(fgets(file_buff, 64, (FILE*)fp) && no_match)
-                 {
-                    if(!strcmp(buffer, file_buff))
-                    {
-                        no_match = 0;
-                        n = write(fd,"Word spelled correctly",36);
-                    }
-                        
-                 }
-                 //if(no_match){printf("Word Not found\n");}
-                 if(no_match){
-                        n = write(fd,Word Not found\n,18);
-                        }
-                        
-            if (n < 0) error("ERROR writing to socket");
-            close(fd);
+                check(fd);
+            if (n < 0){ error("ERROR writing to socket");}
+                close(fd);
             }
-
-                    int g = 0;
-                    for(g = 0; g < 49; g++){printf("%d ", clients[g]);}
-                        printf("\n");
+                    // int g = 0;
+                    // for(g = 0; g < 49; g++){printf("%d ", clients[g]);}
+                    //     printf("\n");
         }
 
     }
@@ -111,37 +115,21 @@ void* doSomeThing(void *arg)
      return NULL;
 }
 
-
-
+//////////////////////////////////////////////////////////////////// Start Main Function 
 int main(int argc, char *argv[])
 {
-     int sockfd, portno, status = 1, flag = 1;
+     int sockfd, portno;
      socklen_t clilen;
      
      
      struct sockaddr_in serv_addr, cli_addr;
-     //int n;
 
-     int i = 1, k = 1, y = 0;;
+     int k = 1, y = 0;;
      int err;
      pthread_t thread;
      char thread_name[16];
      in = 0;
      out = 0;
-
-     FILE *fp;
-     char file_buff[64];
-
-     fp = fopen("dictionary.txt", "r" );
-
-
-
-
-                         
-                        // for(i = 1; i < 49; i++){clients[i] = 0;}
-                
-                        // for(y = 0; y < 49; y++){printf("%d ", clients[y]);}
-                        // printf("\n");
 
 ///////////////////////////////////////////////////////////////////// Rename master thread
     
@@ -149,15 +137,15 @@ int main(int argc, char *argv[])
     err = pthread_setname_np(thread, "Master");
     if (err != 0)
             printf("can't rename thread :[%s]\n", strerror(err));
-    else
-            printf("Thread renamed successfully\n");
+    // else
+    //         printf("Thread renamed successfully\n");
 
     err = pthread_getname_np(thread, thread_name, 16);
     if (err != 0)
             printf("can't get thread name :[%s]\n", strerror(err));
 
 ////////////////////////////////////////////////////////////////////// Create worker threads
-            printf("made it\n");
+
 //////////////////////////////////////////////////////Start Server... Create Socket and bind
      
      if (argc < 2) {
@@ -179,9 +167,9 @@ int main(int argc, char *argv[])
               sizeof(serv_addr)) < 0) 
               error("ERROR on binding");
      listen(sockfd,5);                                   //Set port Listener
-     printf("binding complete\n");
+     //printf("binding complete\n");
 /////////////////////////////////////////////////////// Main thread accepting and storing client fds     
-     y = 0;
+
     while(y < 5)
     {
         err = pthread_create(&(tid[y]), NULL, &doSomeThing, NULL);
@@ -192,14 +180,14 @@ int main(int argc, char *argv[])
         y++;
     }
 
-     flag = 1;
+     int flag = 1;
      int client_fd;
      clilen = sizeof(cli_addr);
 
      while(1)
      {
     
-        if(client_count == 49){printf("in Full\n" );flag =0;}
+        if(client_count == 49){printf("in Full\n" );flag =0;}               //stop producing if full
         else if(clients[in%50] == 0){     
         client_fd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
         if(clients[in%50] < 0) 
@@ -210,12 +198,8 @@ int main(int argc, char *argv[])
         }
     }
 
+    // printf("\r%s is now done.... waiting for workers", thread_name);
 
-
-     // return 0;
-
-
-    printf("\r%s is now done.... waiting for workers", thread_name);
 
     for ( k = 1 ; k < 5; k++){
        pthread_join(tid[k], NULL);

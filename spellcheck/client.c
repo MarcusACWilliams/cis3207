@@ -31,10 +31,10 @@ int main(int argc, char *argv[])
        exit(0);
     }
 
-if(fork() == 0)
-    {sleep(1);}
-else if(fork() == 0){sleep(1);}
-else if(fork() == 0){sleep(1);}
+// if(fork() == 0)
+//     {sleep(1);}
+// else if(fork() == 0){sleep(1);}
+// else if(fork() == 0){sleep(1);}
     
 
 while(1){
@@ -56,12 +56,12 @@ while(1){
     serv_addr.sin_port = htons(portno);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
-    //printf("Please enter the message: ");
+    printf("Please enter the message: ");
     bzero(buffer,256);
-    //fgets(buffer,255,stdin);
+    fgets(buffer,255,stdin);
     wait(2);
-    //n = write(sockfd,buffer,strlen(buffer));
-    n = write(sockfd,"Hello", 256);
+    n = write(sockfd,buffer,strlen(buffer));
+    //n = write(sockfd,"Hello", 256);
     if (n < 0) 
          error("ERROR writing to socket");
     bzero(buffer,256);

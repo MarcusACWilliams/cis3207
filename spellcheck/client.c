@@ -26,16 +26,25 @@ int main(int argc, char *argv[])
     struct hostent *server;
     char buffer[256];
 
+
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
     }
 
 // if(fork() == 0)
-//     {sleep(1);}
-// else if(fork() == 0){sleep(1);}
-// else if(fork() == 0){sleep(1);}
+//      {sleep(1);}
+//  else if(fork() == 0){sleep(1);}
+//  else if(fork() == 0){sleep(1);}
     
+    // srand(time(NULL));
+    // randomnumber = rand();
+    // fp = fopen("dictonary.txt", "r");
+    // bzero(randwordbuff, 256);
+    // while(fgets(randwordbuff, 256, fp) && randomnumber > 0)
+    // {
+    //                 randomnumber--;
+    // }
 
 while(1){
     //portno = atoi(argv[2]);
@@ -58,17 +67,18 @@ while(1){
         error("ERROR connecting");
     printf("Please enter the message: ");
     bzero(buffer,256);
-    fgets(buffer,255,stdin);
+    fgets(buffer,256,stdin);
     wait(2);
     n = write(sockfd,buffer,strlen(buffer));
     //n = write(sockfd,"Hello", 256);
     if (n < 0) 
          error("ERROR writing to socket");
     bzero(buffer,256);
-    n = read(sockfd,buffer,255);
+    n = read(sockfd,buffer,256);
     if (n < 0) 
          error("ERROR reading from socket");
     printf("%s\n",buffer);
+
     close(sockfd);
 
     sleep(1);

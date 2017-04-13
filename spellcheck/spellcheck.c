@@ -8,13 +8,35 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <semaphore.h>
 
 pthread_t tid[20];
 int client_count = 0, in = 0, out = 0, full = 0;
 int clients[49];
 FILE *fp;
 pthread_mutex_t client_mutex, service_mutex, count_mutex;
+typedef sem_t Semaphore;
 
+Semaphore *make_sem(int value)
+{
+    Semaphore *sem = malloc(sizeof(Semaphore));
+    int n = sem_init(sem, 0, value);
+    if(n != 0){perror("sem failed to initialize");}
+    return sem;
+}
+
+void semaphore_wait(Semaphore *sem)
+{
+    int n = sem_wait(sem);
+    if(n != 0){perror("sem_wait failed");}
+}
+
+void semaphore_signal(Semaphore *sem)
+{
+    int n = sem_post(sem);
+    if(n != 0){perror("sem_post failed");}
+
+}
 void error(const char *msg)
 {
     perror(msg);

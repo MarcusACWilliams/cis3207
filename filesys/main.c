@@ -1,4 +1,11 @@
+/*
+Marcus Williams
+Lab 4 File System
+April 30 2017
+*/
+
 #include <stdio.h>
+//Need to add all the basic libraries and then some system specific ones
 
 
 
@@ -10,7 +17,9 @@
 */
  
 
-
+//Create new Disk and mount in OS. The 10 MB file "Disk" must be declared as a disk device
+//	before we can use it as storage
+//Here we are going to use new_disk, but maybe we'll have to use fsmk() 
 int new_disk(disk_t *disk, char *name);
 
 //Make Super block and write it to first block in new disk
@@ -214,7 +223,10 @@ int write_to_file(char *file_to_write, char *parent_directory, char *mode )
 
 int read_file(char *file_to_read, char *mode)
 {
-	
+	//open file using previous open function
+	open_file(file_to_read);
+	//After the file is open, push it to stdio
+	puts(file_to_read);
 
 }
 
